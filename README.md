@@ -18,6 +18,7 @@ npx hardhat run scripts/deploy.js
 
 # Work flow
 
+```shell
 Constructor takes two arguments:
 -- Token address
 -- Address of payer where the ERC20 tokens are present
@@ -31,4 +32,4 @@ airDropAqr function will airdrop Tokens to particular account
 batchAirDropAqr function: As the name suggests, this will airdrop Tokens to array of account
 
 airDropToAllEligible function will airdrop Tokens to all account who is eligble for airdrop.
-
+```
