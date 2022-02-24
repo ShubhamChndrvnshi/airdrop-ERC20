@@ -22,12 +22,32 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: {
+    version: "0.8.4",
+    // settings: {
+    //   optimizer: {
+    //     enabled: true,
+    //     runs: 1000,
+    //   },
+    // },
+  },
   networks: {
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.DEPLOYER_PRIVATE_KEY
+        ? [process.env.DEPLOYER_PRIVATE_KEY]
+        : [],
+    },
+    matic: {
+      url: process.env.MATIC_URL,
+      accounts: [`${process.env.DEPLOYER_PRIVATE_KEY}`],
+      gas: 2100000,
+      gasPrice: 8000000000,
+      chainId: 80001,
+    },
+    ganache: {
+      url: "http://127.0.0.1:8545",
+      chainId: 1337,
     },
   },
   gasReporter: {
