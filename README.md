@@ -16,7 +16,7 @@ npx hardhat coverage
 npx hardhat run scripts/deploy.js
 ```
 
-# Work flow
+# HOW TO USE
 
 ```shell
 Constructor takes two arguments:
