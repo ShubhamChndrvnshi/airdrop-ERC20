@@ -29,8 +29,12 @@ contract AirDrop is Ownable, ReentrancyGuard{
     function addAirDrops(address[] memory _candidates, uint256[] memory _amount) external onlyOwner {
         require(_candidates.length == _amount.length,"Array length mismatch");
         for(uint256 i; i < _candidates.length; i++){
-            airDrops[_candidates[i]] = drop(_amount[i],0);
-            airDropAccounts.push(_candidates[i]);
+            if(airDrops[_candidates[i]].eligible > 0 || airDrops[_candidates[i]].airDroped > 0){
+                airDrops[_candidates[i]].eligible += _amount[i];
+            } else {
+                airDrops[_candidates[i]] = drop(_amount[i],0);
+                airDropAccounts.push(_candidates[i]);
+            }
         }
     }
 
@@ -69,7 +73,8 @@ contract AirDrop is Ownable, ReentrancyGuard{
     function _airDropToAccount(address _account) internal {
         uint256 tokensToSend = airDrops[_account].eligible;
         IERC20(erc20).transferFrom( payer, _account, tokensToSend);
-        airDrops[_account] = drop(0, tokensToSend);
+        airDrops[_account].eligible -= tokensToSend;
+        airDrops[_account].airDroped += tokensToSend;
     }
 
     function withdraw(address _token) public onlyOwner nonReentrant{

@@ -27,9 +27,9 @@ addAirDrops function Takes two args:
 -- _candidates - This is array of candidates where Tokens are to be airdroppped
 -- _amount - Array of amount of Tokens that needs be airdropped to candidates
 
-airDropAqr function will airdrop Tokens to particular account
+airDropTokens function will airdrop Tokens to particular account
 
-batchAirDropAqr function: As the name suggests, this will airdrop Tokens to array of account
+batchAirDropTokens function: As the name suggests, this will airdrop Tokens to array of account
 
 airDropToAllEligible function will airdrop Tokens to all account who is eligble for airdrop.
 ```
