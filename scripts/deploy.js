@@ -67,12 +67,14 @@ async function main() {
     );
     console.log(accountsArray.length + " accounts found for airdrop");
     for (let i = 0; i < accountsArray.length; i++) {
-      accounts.push(accountsArray[i].account);
-      ammounts.push(
-        BigNumber.from(accountsArray[i].ammount * 1e8).mul(
-          BigNumber.from(10).pow(BigNumber.from(10))
-        )
-      );
+      if (accountsArray[i].ammount > 0) {
+        accounts.push(accountsArray[i].account);
+        ammounts.push(
+          BigNumber.from(accountsArray[i].ammount * 1e8).mul(
+            BigNumber.from(10).pow(BigNumber.from(10))
+          )
+        );
+      }
     }
   }
   if (accounts.length) {
