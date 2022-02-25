@@ -61,7 +61,7 @@ contract AirDrop is Ownable, ReentrancyGuard{
     function airdropsLeft(uint256 n) public view returns( address  [] memory){
         address[] memory accLeft = new address[](n);
         uint256 j;
-        for(uint256 i; i < airDropAccounts.length; i++){
+        for(uint256 i; i < airDropAccounts.length && j < n; i++){
             if(airDrops[airDropAccounts[i]].eligible > 0){
                 accLeft[j] = airDropAccounts[i];
                 j++;

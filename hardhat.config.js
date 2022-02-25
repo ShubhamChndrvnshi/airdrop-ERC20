@@ -45,6 +45,13 @@ module.exports = {
       gasPrice: 8000000000,
       chainId: 80001,
     },
+    polygon: {
+      url: process.env.POLYGON_URL,
+      accounts: [`${process.env.DEPLOYER_PRIVATE_KEY}`],
+      gas: 2100000,
+      gasPrice: 8000000000,
+      chainId: 80001,
+    },
     ganache: {
       url: "http://127.0.0.1:8545",
       chainId: 1337,

@@ -10,7 +10,6 @@ const { BigNumber } = require("ethers");
 require("dotenv").config();
 
 async function main() {
-  console.log(process.env);
   mkdirSync("abi", { recursive: true });
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -42,9 +41,9 @@ async function main() {
     createAbiJSON(mockToken, reciept, "Token");
   }
 
-  // deploying address registry
+  // deploying Airdrop contract
   printStars();
-  console.log("Deploying AddressRegistry");
+  console.log("Deploying Airdrop contract");
   console.log("Procuring artifacts");
   const AirDrop = await hre.ethers.getContractFactory("AirDrop");
   console.log("Sending transaction");
@@ -70,15 +69,32 @@ async function main() {
       if (accountsArray[i].ammount > 0) {
         accounts.push(accountsArray[i].account);
         ammounts.push(
-          BigNumber.from(accountsArray[i].ammount * 1e8).mul(
+          BigNumber.from(Math.round(accountsArray[i].ammount * 1e8)).mul(
             BigNumber.from(10).pow(BigNumber.from(10))
           )
         );
       }
+      if (accounts.length === 30) {
+        console.log("sending trasaction for 30 accounts");
+        const gasLimit = await getGasLimit();
+        console.log("Transaction sent");
+        const reciept = await airDrop.addAirDrops(accounts, ammounts, {
+          gasLimit,
+        });
+        console.log("Waiting for confimation");
+        await reciept.wait();
+        accounts.length = 0;
+        ammounts.length = 0;
+      }
     }
   }
   if (accounts.length) {
-    await airDrop.addAirDrops(accounts, ammounts);
+    console.log("sending trasaction for left accounts: " + accounts.length);
+    const gasLimit = await getGasLimit();
+    console.log("Transaction sent");
+    const reciept = await airDrop.addAirDrops(accounts, ammounts, { gasLimit });
+    console.log("Waiting for confimation");
+    await reciept.wait();
   }
   console.log("Deployed all");
 }
@@ -113,6 +129,12 @@ function createAbiJSON(artifact, reciept, filename) {
 
 function printStars() {
   console.log("\n*****************************************************");
+}
+async function getGasLimit() {
+  console.log("Fetch latest block details");
+  const latestBlock = await hre.ethers.provider.getBlockNumber();
+  const { gasLimit } = await hre.ethers.provider.getBlock(latestBlock);
+  return gasLimit;
 }
 
 // We recommend this pattern to be able to use async/await everywhere
