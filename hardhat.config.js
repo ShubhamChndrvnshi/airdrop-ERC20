@@ -41,16 +41,12 @@ module.exports = {
     matic: {
       url: process.env.MATIC_URL,
       accounts: [`${process.env.DEPLOYER_PRIVATE_KEY}`],
-      gas: 2100000,
-      gasPrice: 8000000000,
       chainId: 80001,
     },
     polygon: {
       url: process.env.POLYGON_URL,
       accounts: [`${process.env.DEPLOYER_PRIVATE_KEY}`],
-      gas: 2100000,
-      gasPrice: 8000000000,
-      chainId: 80001,
+      chainId: 137,
     },
     ganache: {
       url: "http://127.0.0.1:8545",
@@ -58,8 +54,7 @@ module.exports = {
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
+    enabled: !!process.env.REPORT_GAS,
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

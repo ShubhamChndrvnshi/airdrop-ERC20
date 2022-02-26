@@ -8,6 +8,7 @@ const hre = require("hardhat");
 const { mkdirSync, existsSync, readFileSync, writeFileSync } = require("fs");
 const { BigNumber } = require("ethers");
 require("dotenv").config();
+const GasEstimator = require("./gasEstimator");
 
 async function main() {
   mkdirSync("abi", { recursive: true });
@@ -19,8 +20,9 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-
+  // const provider = hre.ethers.getDefaultProvider(hre.network.config.url);
   // Deploy Mock Token
+  const gasEstimator = new GasEstimator("polygon");
   let mockToken;
   if (!process.env.DEPLOYED_ERC20_ADDRESS) {
     printStars();
@@ -40,7 +42,6 @@ async function main() {
     console.log("Transaction confirmed\ncreating abi");
     createAbiJSON(mockToken, reciept, "Token");
   }
-
   // deploying Airdrop contract
   printStars();
   console.log("Deploying Airdrop contract");
@@ -49,8 +50,15 @@ async function main() {
   console.log("Sending transaction");
   const airDrop = await AirDrop.deploy(
     process.env.DEPLOYED_ERC20_ADDRESS || mockToken.address,
-    process.env.PAYER_ADDRESS
+    process.env.PAYER_ADDRESS,
+    {
+      gasPrice: hre.ethers.utils.parseUnits(
+        Math.floor(await gasEstimator.estimate()).toString(),
+        "gwei"
+      ),
+    }
   );
+  console.log(airDrop.deployTransaction.hash);
   console.log("Transaction sent");
   console.log("Waiting for deployment");
   await airDrop.deployed();
@@ -76,11 +84,14 @@ async function main() {
       }
       if (accounts.length === 30) {
         console.log("sending trasaction for 30 accounts");
-        const gasLimit = await getGasLimit();
         console.log("Transaction sent");
         const reciept = await airDrop.addAirDrops(accounts, ammounts, {
-          gasLimit,
+          gasPrice: hre.ethers.utils.parseUnits(
+            Math.floor(await gasEstimator.estimate()).toString(),
+            "gwei"
+          ),
         });
+        console.log(reciept.hash);
         console.log("Waiting for confimation");
         await reciept.wait();
         accounts.length = 0;
@@ -90,9 +101,13 @@ async function main() {
   }
   if (accounts.length) {
     console.log("sending trasaction for left accounts: " + accounts.length);
-    const gasLimit = await getGasLimit();
     console.log("Transaction sent");
-    const reciept = await airDrop.addAirDrops(accounts, ammounts, { gasLimit });
+    const reciept = await airDrop.addAirDrops(accounts, ammounts, {
+      gasPrice: hre.ethers.utils.parseUnits(
+        Math.floor(await gasEstimator.estimate()).toString(),
+        "gwei"
+      ),
+    });
     console.log("Waiting for confimation");
     await reciept.wait();
   }
@@ -129,12 +144,6 @@ function createAbiJSON(artifact, reciept, filename) {
 
 function printStars() {
   console.log("\n*****************************************************");
-}
-async function getGasLimit() {
-  console.log("Fetch latest block details");
-  const latestBlock = await hre.ethers.provider.getBlockNumber();
-  const { gasLimit } = await hre.ethers.provider.getBlock(latestBlock);
-  return gasLimit;
 }
 
 // We recommend this pattern to be able to use async/await everywhere
