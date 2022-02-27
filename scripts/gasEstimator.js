@@ -3,7 +3,7 @@ const axios = require("axios");
 module.exports = class GasPriceEstimator {
   constructor(
     network,
-    { level = "fast", adjustment = 0, requestTimeout = 30000 } = {}
+    { level = "instant", adjustment = 0, requestTimeout = 30000 } = {}
   ) {
     this.network = network;
     this.level = level;
@@ -64,6 +64,7 @@ module.exports = class GasPriceEstimator {
       "https://gasstation-mainnet.matic.network"
     );
     const data = res.data;
+    console.log("gas: ", data);
     return {
       instant: data.fastest,
       fast: data.fast,

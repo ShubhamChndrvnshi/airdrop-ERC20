@@ -53,7 +53,7 @@ async function main() {
     process.env.PAYER_ADDRESS,
     {
       gasPrice: hre.ethers.utils.parseUnits(
-        Math.floor(await gasEstimator.estimate()).toString(),
+        Math.ceil(await gasEstimator.estimate()).toString(),
         "gwei"
       ),
     }
@@ -87,7 +87,7 @@ async function main() {
         console.log("Transaction sent");
         const reciept = await airDrop.addAirDrops(accounts, ammounts, {
           gasPrice: hre.ethers.utils.parseUnits(
-            Math.floor(await gasEstimator.estimate()).toString(),
+            Math.ceil(await gasEstimator.estimate()).toString(),
             "gwei"
           ),
         });
@@ -104,7 +104,7 @@ async function main() {
     console.log("Transaction sent");
     const reciept = await airDrop.addAirDrops(accounts, ammounts, {
       gasPrice: hre.ethers.utils.parseUnits(
-        Math.floor(await gasEstimator.estimate()).toString(),
+        Math.ceil(await gasEstimator.estimate()).toString(),
         "gwei"
       ),
     });
