@@ -7,14 +7,15 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract AirDrop is Ownable, ReentrancyGuard{
+contract AirDrop is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address;
 
     struct drop {
         uint256 eligible;
         uint256 airDroped;
-
+        uint256 eligibleEth;
+        uint256 airDropedEth;
     }
     mapping(address => drop) public airDrops;
     address[] public airDropAccounts;
@@ -26,19 +27,26 @@ contract AirDrop is Ownable, ReentrancyGuard{
         payer = _payer;
     }
 
-    function addAirDrops(address[] memory _candidates, uint256[] memory _amount) external onlyOwner {
-        require(_candidates.length == _amount.length,"Array length mismatch");
-        for(uint256 i; i < _candidates.length; i++){
-            if(airDrops[_candidates[i]].eligible > 0 || airDrops[_candidates[i]].airDroped > 0){
-                airDrops[_candidates[i]].eligible += _amount[i];
-            } else {
-                airDrops[_candidates[i]] = drop(_amount[i],0);
+    function addAirDrops(
+        address[] memory _candidates,
+        uint256[] memory _amount,
+        uint256[] memory _amountEth
+    ) external onlyOwner {
+        require(
+            _candidates.length == _amount.length &&
+                _candidates.length == _amountEth.length,
+            "Array length mismatch"
+        );
+        for (uint256 i; i < _candidates.length; i++) {
+            airDrops[_candidates[i]].eligible += _amount[i];
+            airDrops[_candidates[i]].eligibleEth += _amountEth[i];
+            if( indexOf(airDropAccounts, _candidates[i]) < 0 ){
                 airDropAccounts.push(_candidates[i]);
             }
         }
     }
 
-    function airdropAccountsLength() external view returns(uint length){
+    function airdropAccountsLength() external view returns (uint256 length) {
         return airDropAccounts.length;
     }
 
@@ -46,23 +54,43 @@ contract AirDrop is Ownable, ReentrancyGuard{
         _airDropToAccount(account);
     }
 
-    function batchAirDropTokens(address[] memory accounts) public onlyOwner nonReentrant {
-        for(uint i; i < accounts.length; i++){
+    function batchAirDropTokens(address[] memory accounts)
+        public
+        onlyOwner
+        nonReentrant
+    {
+        for (uint256 i; i < accounts.length; i++) {
             _airDropToAccount(accounts[i]);
         }
     }
 
     function airDropToAllEligible() public onlyOwner nonReentrant {
-        for(uint i; i < airDropAccounts.length; i++){
+        for (uint256 i; i < airDropAccounts.length; i++) {
             _airDropToAccount(airDropAccounts[i]);
         }
     }
 
-    function airdropsLeft(uint256 n) public view returns( address  [] memory){
+    function airdropsLeftERC20(uint256 n)
+        public
+        view
+        returns (address[] memory)
+    {
         address[] memory accLeft = new address[](n);
         uint256 j;
-        for(uint256 i; i < airDropAccounts.length && j < n; i++){
-            if(airDrops[airDropAccounts[i]].eligible > 0){
+        for (uint256 i; i < airDropAccounts.length && j < n; i++) {
+            if (airDrops[airDropAccounts[i]].eligible > 0) {
+                accLeft[j] = airDropAccounts[i];
+                j++;
+            }
+        }
+        return accLeft;
+    }
+
+    function airdropsLeftEth(uint256 n) public view returns (address[] memory) {
+        address[] memory accLeft = new address[](n);
+        uint256 j;
+        for (uint256 i; i < airDropAccounts.length && j < n; i++) {
+            if (airDrops[airDropAccounts[i]].eligibleEth > 0) {
                 accLeft[j] = airDropAccounts[i];
                 j++;
             }
@@ -72,17 +100,42 @@ contract AirDrop is Ownable, ReentrancyGuard{
 
     function _airDropToAccount(address _account) internal {
         uint256 tokensToSend = airDrops[_account].eligible;
-        IERC20(erc20).transferFrom( payer, _account, tokensToSend);
-        airDrops[_account].eligible -= tokensToSend;
-        airDrops[_account].airDroped += tokensToSend;
+        if (tokensToSend > 0) {
+            airDrops[_account].eligible -= tokensToSend;
+            airDrops[_account].airDroped += tokensToSend;
+            IERC20(erc20).transferFrom(payer, _account, tokensToSend);
+        }
+        uint256 ethToSend = airDrops[_account].eligibleEth;
+        require(
+            ethToSend <= address(this).balance,
+            "Not enough eth in contract"
+        );
+        if (ethToSend > 0) {
+            airDrops[_account].eligibleEth -= ethToSend;
+            airDrops[_account].airDropedEth += ethToSend;
+            payable(_account).transfer(ethToSend);
+        }
     }
 
-    function withdraw(address _token) public onlyOwner nonReentrant{
+    function indexOf(address[] memory arr, address searchFor)
+        internal
+        pure
+        returns (int)
+    {
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] == searchFor) {
+                return int(i);
+            }
+        }
+        return -1; // not found
+    }
+
+    function withdraw(address _token) public onlyOwner nonReentrant {
         IERC20 acceptedToken = IERC20(_token);
-        acceptedToken.transfer( owner(), acceptedToken.balanceOf(address(this)));
+        acceptedToken.transfer(owner(), acceptedToken.balanceOf(address(this)));
     }
 
-    function withdraw() public onlyOwner nonReentrant{
+    function withdraw() public onlyOwner nonReentrant {
         Address.sendValue(payable(owner()), address(this).balance);
     }
 }
