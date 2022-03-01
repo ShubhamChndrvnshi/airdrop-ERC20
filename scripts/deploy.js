@@ -67,47 +67,64 @@ async function main() {
   console.log("Transaction confirmed\ncreating abi");
   createAbiJSON(airDrop, reciept, "AirDrop");
   const accounts = [];
-  const ammounts = [];
+  const amountsERC20 = [];
+  const amountEth = [];
   if (existsSync(`${__dirname}/airdropAccounts.json`)) {
     const accountsArray = JSON.parse(
       readFileSync(`${__dirname}/airdropAccounts.json`, "utf8")
     );
     console.log(accountsArray.length + " accounts found for airdrop");
     for (let i = 0; i < accountsArray.length; i++) {
-      if (accountsArray[i].ammount > 0) {
+      if (accountsArray[i].amount > 0 || accounts[i].amountEth > 0) {
         accounts.push(accountsArray[i].account);
-        ammounts.push(
-          BigNumber.from(Math.round(accountsArray[i].ammount * 1e8)).mul(
+        amountsERC20.push(
+          BigNumber.from(Math.round(accountsArray[i].amount * 1e8)).mul(
             BigNumber.from(10).pow(BigNumber.from(10))
           )
+        );
+        amountEth.push(
+          BigNumber.from(
+            Math.round(Number(accountsArray[i].amountEth) * 1e8)
+          ).mul(BigNumber.from(10).pow(BigNumber.from(10)))
         );
       }
       if (accounts.length === 30) {
         console.log("sending trasaction for 30 accounts");
         console.log("Transaction sent");
-        const reciept = await airDrop.addAirDrops(accounts, ammounts, {
-          gasPrice: hre.ethers.utils.parseUnits(
-            Math.ceil(await gasEstimator.estimate()).toString(),
-            "gwei"
-          ),
-        });
+        const reciept = await airDrop.addAirDrops(
+          accounts,
+          amountsERC20,
+          amountEth,
+          {
+            gasPrice: hre.ethers.utils.parseUnits(
+              Math.ceil(await gasEstimator.estimate()).toString(),
+              "gwei"
+            ),
+          }
+        );
         console.log(reciept.hash);
         console.log("Waiting for confimation");
         await reciept.wait();
         accounts.length = 0;
-        ammounts.length = 0;
+        amountsERC20.length = 0;
+        amountEth.length = 0;
       }
     }
   }
   if (accounts.length) {
     console.log("sending trasaction for left accounts: " + accounts.length);
     console.log("Transaction sent");
-    const reciept = await airDrop.addAirDrops(accounts, ammounts, {
-      gasPrice: hre.ethers.utils.parseUnits(
-        Math.ceil(await gasEstimator.estimate()).toString(),
-        "gwei"
-      ),
-    });
+    const reciept = await airDrop.addAirDrops(
+      accounts,
+      amountsERC20,
+      amountEth,
+      {
+        gasPrice: hre.ethers.utils.parseUnits(
+          Math.ceil(await gasEstimator.estimate()).toString(),
+          "gwei"
+        ),
+      }
+    );
     console.log("Waiting for confimation");
     await reciept.wait();
   }

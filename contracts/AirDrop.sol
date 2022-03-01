@@ -11,13 +11,13 @@ contract AirDrop is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address;
 
-    struct drop {
+    struct Drop {
         uint256 eligible;
         uint256 airDroped;
         uint256 eligibleEth;
         uint256 airDropedEth;
     }
-    mapping(address => drop) public airDrops;
+    mapping(address => Drop) public airDrops;
     address[] public airDropAccounts;
     address public erc20;
     address public payer;
@@ -45,6 +45,8 @@ contract AirDrop is Ownable, ReentrancyGuard {
             }
         }
     }
+
+    function addEth() external payable {}
 
     function airdropAccountsLength() external view returns (uint256 length) {
         return airDropAccounts.length;
